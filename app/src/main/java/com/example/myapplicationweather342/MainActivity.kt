@@ -1,106 +1,142 @@
 package com.example.myapplicationweather342
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.*
+import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
-    private val weatherViewModel: WeatherViewModel by viewModels()
+    private val viewModel: WeatherViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WeatherScreen(weatherViewModel)
+            AppNavigation(viewModel)
         }
+    }
+}
+
+@Composable
+fun AppNavigation(viewModel: WeatherViewModel) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "weather") {
+        composable("weather") { WeatherScreen(viewModel, navController) }
+        composable("forecast") { ForecastScreen(viewModel, navController) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherScreen(weatherViewModel: WeatherViewModel = viewModel()) {
-    val weatherState by weatherViewModel.weatherData.collectAsState()
+fun WeatherScreen(viewModel: WeatherViewModel, navController: NavController) {
+    val context = LocalContext.current
+    val weatherState by viewModel.weatherData.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    // ✅ Use the correct function name
-    LaunchedEffect(Unit) {
-        if (weatherState == null) {
-            weatherViewModel.fetchWeatherByCoordinates(44.34, 10.99, "bbd0cf71d119762444df04c15a584eff")
+    var zipCode by remember { mutableStateOf("") }
+
+    // 🔔 Handle error messages with toast
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // ✅ Top Bar
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+
         TopAppBar(
-            title = { Text("Weather Finder", color = Color.Black) },
+            title = { Text(stringResource(R.string.app_name), color = Color.Black) },
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Gray),
+                .background(Color.Gray)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ✅ Display Weather Info
+        OutlinedTextField(
+            value = zipCode,
+            onValueChange = {
+                if (it.length <= 5 && it.all { c -> c.isDigit() }) zipCode = it
+            },
+            label = { Text(stringResource(R.string.enter_zip)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = {
+                if (zipCode.length == 5) {
+                    viewModel.fetchWeatherByZip(zipCode, "bbd0cf71d119762444df04c15a584eff")
+                } else {
+                    Toast.makeText(context, "Enter a valid 5-digit ZIP", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Fetch Weather")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = {
+                if (weatherState != null) {
+                    navController.navigate("forecast")
+                } else {
+                    Toast.makeText(context, "Load current weather first", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.show_forecast))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         weatherState?.let { weather ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(weather.cityName, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "${weather.main.temperature}°",
-                    fontSize = 64.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-
+                Text("${weather.main.temperature}°", fontSize = 64.sp, fontWeight = FontWeight.Bold)
                 Text("Feels like ${weather.main.temperature}°", fontSize = 14.sp, color = Color.Gray)
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // ✅ Weather Icon (Placeholder)
                 Image(
                     painter = painterResource(id = R.mipmap.ic_launcher_foreground),
                     contentDescription = "Weather Icon",
                     modifier = Modifier.size(50.dp)
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // ✅ Additional Weather Details
-                Column {
-                    Text("Humidity: ${weather.main.humidity}%", fontSize = 16.sp)
-                    Text("Description: ${weather.weather[0].description}", fontSize = 16.sp)
-                }
+                Text("Humidity: ${weather.main.humidity}%", fontSize = 16.sp)
+                Text("Description: ${weather.weather[0].description}", fontSize = 16.sp)
             }
-        } ?: run {
-            // ✅ Show Loading State
-            Text(
-                text = "Loading weather...",
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                fontSize = 20.sp,
-                color = Color.Gray
-            )
-        }
+        } ?: Text(
+            text = "No weather data yet.",
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
     }
 }
 
