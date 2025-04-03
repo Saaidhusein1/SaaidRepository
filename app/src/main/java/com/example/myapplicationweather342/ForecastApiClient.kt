@@ -5,9 +5,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object WeatherApiClient {
-    // 🔁 Updated to use One Call 3.0 API
-    private const val BASE_URL = "https://api.openweathermap.org/data/2.5/"
+object ForecastApiClient {
+    private const val BASE_URL = "https://api.openweathermap.org/data/3.0/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -20,7 +19,7 @@ object WeatherApiClient {
     val apiService: WeatherApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(client)  // ✅ Added OkHttpClient with logging
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(WeatherApiService::class.java)
