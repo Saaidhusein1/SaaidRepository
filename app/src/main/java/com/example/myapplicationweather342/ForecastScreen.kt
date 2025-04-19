@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import java.text.SimpleDateFormat
@@ -13,39 +15,62 @@ import java.util.*
 
 @Composable
 fun ForecastScreen(viewModel: WeatherViewModel, navController: NavController) {
-    val forecast = viewModel.forecastData.collectAsState().value
+    val forecastState = viewModel.forecastData.collectAsState().value
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("16-Day Forecast", style = MaterialTheme.typography.headlineSmall)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // 🔙 Back button and title
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_back),
+                    contentDescription = "Back"
+                )
+            }
+            Text(
+                text = "5-Day Forecast",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        forecast?.daily?.let { days ->
+        // 🌤 Forecast list
+        if (forecastState != null && forecastState.list.isNotEmpty()) {
             LazyColumn {
-                items(days) { day ->
-                    ForecastItem(day)
+                items(forecastState.list) { forecast ->
+                    ForecastItem(forecast)
                 }
             }
-        } ?: Text("No forecast data available.")
+        } else {
+            Text("No forecast data available.")
+        }
     }
 }
 
 @Composable
-fun ForecastItem(day: DailyForecast) {
-    val date = remember(day.dt) {
-        SimpleDateFormat("EEE, MMM d", Locale.getDefault()).format(Date(day.dt * 1000))
-    }
+fun ForecastItem(forecast: ForecastItem) {
+    val sdf = remember { SimpleDateFormat("EEE, MMM d • h a", Locale.getDefault()) }
+    val dateText = sdf.format(Date(forecast.dt * 1000L))
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = date, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Day: ${day.temp.day}°C | Min: ${day.temp.min}°C | Max: ${day.temp.max}°C")
-            Text(text = day.weather.firstOrNull()?.description ?: "")
-        }
+        Text("Time: $dateText", style = MaterialTheme.typography.bodyLarge)
+        Text("Temp: ${forecast.main.temperature}°", style = MaterialTheme.typography.bodyMedium)
+        Text("Humidity: ${forecast.main.humidity}%", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            "Description: ${forecast.weather.firstOrNull()?.description ?: "N/A"}",
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

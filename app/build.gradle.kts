@@ -64,10 +64,13 @@ dependencies {
     // ✅ Retrofit for API requests
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.retrofit2:adapter-rxjava3:2.9.0")  // ✅ Added Retrofit Coroutines adapter
+    implementation("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
 
     // ✅ Kotlin Coroutines & StateFlow
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+
+    // ✅ 🔽 ADD THIS: Google Play Services Location
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -9,6 +9,7 @@
     <string name="error_zip_length">Enter a valid 5-digit ZIP</string>
     <string name="error_load_weather_first">Load current weather first</string>
     <string name="no_weather_data">No weather data yet.</string>
+    <string name="my_location_description">Use My Location</string>
 
     <!-- Forecast Screen -->
     <string name="forecast_title">16-Day Forecast</string>

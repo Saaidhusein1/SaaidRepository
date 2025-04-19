@@ -3,8 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ✅ Required Permissions -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:targetApi="33" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +22,7 @@
         android:theme="@style/Theme.MyApplicationWeather342"
         tools:targetApi="31">
 
+        <!-- ✅ Main Launcher Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -28,6 +34,11 @@
             </intent-filter>
         </activity>
 
+        <!-- ✅ Foreground Location Weather Service -->
+        <service
+            android:name=".LocationWeatherService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
     </application>
-
 </manifest>
