@@ -3,12 +3,12 @@ package com.example.myapplicationweather342
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.myapplicationweather342.WeatherResponse
-import com.example.myapplicationweather342.ForecastResponse
 
 class WeatherViewModel : ViewModel() {
+
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
     val weatherData: StateFlow<WeatherResponse?> = _weatherData
 
@@ -18,33 +18,45 @@ class WeatherViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun fetchWeatherByZip(zip: String, apiKey: String) {
+    fun fetchWeatherByZip(zipCode: String, apiKey: String) {
         viewModelScope.launch {
             try {
-                val response = WeatherApiClient.apiService.getWeatherByZip(zip, apiKey)
+                val response = WeatherApiClient.apiService.getWeatherByZip(zipCode, apiKey)
+                Log.d("WeatherViewModel", "✅ Weather fetched by ZIP: ${response.cityName}")
                 _weatherData.value = response
-
-                // ✅ Use ForecastApiClient for One Call 3.0
-                fetchForecastByCoordinates(response.coord.lat, response.coord.lon, apiKey)
+                fetchForecast(response.coord.lat, response.coord.lon, apiKey)
             } catch (e: Exception) {
-                _weatherData.value = null
-                _errorMessage.value = "Invalid ZIP Code"
-                Log.e("WeatherViewModel", "Weather fetch error", e)
+                Log.e("WeatherViewModel", "❌ Error fetching by ZIP: ${e.message}")
+                _errorMessage.value = "Failed to fetch weather: ${e.message ?: "Unknown error"}"
             }
         }
     }
 
-    fun fetchForecastByCoordinates(lat: Double, lon: Double, apiKey: String) {
+    fun fetchWeatherByCoordinates(lat: Double, lon: Double, apiKey: String) {
         viewModelScope.launch {
             try {
-                val forecast = ForecastApiClient.apiService.getForecastByCoordinates(
-                    lat, lon,
-                    "current,minutely,hourly,alerts", apiKey
-                )
+                Log.d("WeatherViewModel", "🌍 Fetching weather for coordinates: ($lat, $lon)")
+                val response = WeatherApiClient.apiService.getWeatherByCoordinates(lat, lon, apiKey)
+                Log.d("WeatherViewModel", "✅ Weather fetched by coordinates: ${response.cityName}")
+                _weatherData.value = response
+                fetchForecast(lat, lon, apiKey)
+            } catch (e: Exception) {
+                Log.e("WeatherViewModel", "❌ Error fetching by coordinates: ${e.message}")
+                _errorMessage.value = "Failed to fetch weather by location: ${e.message ?: "Unknown error"}"
+            }
+        }
+    }
+
+    private fun fetchForecast(lat: Double, lon: Double, apiKey: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("WeatherViewModel", "🔮 Fetching forecast for: ($lat, $lon)")
+                val forecast = ForecastApiClient.apiService.getForecast(lat, lon, apiKey = apiKey)
+                Log.d("WeatherViewModel", "✅ Forecast fetched: ${forecast.list.size} items")
                 _forecastData.value = forecast
             } catch (e: Exception) {
-                _forecastData.value = null
-                Log.e("WeatherViewModel", "Forecast fetch error", e)
+                Log.e("WeatherViewModel", "❌ Error fetching forecast: ${e.message}")
+                _errorMessage.value = "Failed to fetch forecast: ${e.message ?: "Unknown error"}"
             }
         }
     }
@@ -53,7 +65,3 @@ class WeatherViewModel : ViewModel() {
         _errorMessage.value = null
     }
 }
-
-
-
-

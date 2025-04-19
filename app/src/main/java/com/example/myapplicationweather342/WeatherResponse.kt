@@ -22,4 +22,3 @@ data class Coord(
 data class Weather(
     @SerializedName("description") val description: String
 )
-
