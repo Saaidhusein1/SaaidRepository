@@ -1,16 +1,13 @@
 <resources>
-    <string name="app_name">My Application (Weather342)</string>
+    <string name="app_name">My Weather App</string>
 
-    <!-- Current Weather Screen -->
-    <string name="enter_zip">Enter ZIP Code</string>
-    <string name="show_forecast">Show Forecast</string>
-    <string name="button_fetch_weather">Fetch Weather</string>
-    <string name="error_invalid_zip">Invalid ZIP Code. Please try again.</string>
-    <string name="error_zip_length">Enter a valid 5-digit ZIP</string>
-    <string name="error_load_weather_first">Load current weather first</string>
-    <string name="no_weather_data">No weather data yet.</string>
-
-    <!-- Forecast Screen -->
-    <string name="forecast_title">16-Day Forecast</string>
-    <string name="no_forecast_data">No forecast data available.</string>
+    <!-- Static Weather Data -->
+    <string name="city_name">St. Paul, MN</string>
+    <string name="temp_main">72°</string>
+    <string name="temp_feels_like">Feels like 78°</string>
+    <string name="temp_low">Low 65°</string>
+    <string name="temp_high">High 80°</string>
+    <string name="humidity">Humidity 100%</string>
+    <string name="pressure">Pressure 1023 hPa</string>
+    <string name="sunny_description">Sunny icon</string>
 </resources>
