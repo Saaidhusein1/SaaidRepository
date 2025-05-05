@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class WeatherViewModel : ViewModel() {
+class WeatherViewModel(
+    private val weatherApi: WeatherApiService = WeatherApiClient.apiService,
+    private val forecastApi: ForecastApiService = ForecastApiClient.apiService
+) : ViewModel() {
 
     private val _weatherData = MutableStateFlow<WeatherResponse?>(null)
     val weatherData: StateFlow<WeatherResponse?> = _weatherData
@@ -21,7 +24,7 @@ class WeatherViewModel : ViewModel() {
     fun fetchWeatherByZip(zipCode: String, apiKey: String) {
         viewModelScope.launch {
             try {
-                val response = WeatherApiClient.apiService.getWeatherByZip(zipCode, apiKey)
+                val response = weatherApi.getWeatherByZip(zipCode, apiKey)
                 Log.d("WeatherViewModel", "✅ Weather fetched by ZIP: ${response.cityName}")
                 _weatherData.value = response
                 fetchForecast(response.coord.lat, response.coord.lon, apiKey)
@@ -36,7 +39,7 @@ class WeatherViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 Log.d("WeatherViewModel", "🌍 Fetching weather for coordinates: ($lat, $lon)")
-                val response = WeatherApiClient.apiService.getWeatherByCoordinates(lat, lon, apiKey)
+                val response = weatherApi.getWeatherByCoordinates(lat, lon, apiKey)
                 Log.d("WeatherViewModel", "✅ Weather fetched by coordinates: ${response.cityName}")
                 _weatherData.value = response
                 fetchForecast(lat, lon, apiKey)
@@ -51,7 +54,7 @@ class WeatherViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 Log.d("WeatherViewModel", "🔮 Fetching forecast for: ($lat, $lon)")
-                val forecast = ForecastApiClient.apiService.getForecast(lat, lon, apiKey = apiKey)
+                val forecast = forecastApi.getForecast(lat, lon, apiKey = apiKey)
                 Log.d("WeatherViewModel", "✅ Forecast fetched: ${forecast.list.size} items")
                 _forecastData.value = forecast
             } catch (e: Exception) {
